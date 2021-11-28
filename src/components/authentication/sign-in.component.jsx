@@ -1,7 +1,22 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+
+
+// SweetAlert
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+
+// Custom components
 import FormInput from "../form-elements/form-input.component";
 import FormButton from "../form-elements/form-buttom.component";
+
+import { setCurrentUser } from "../../redux/user/user.actions";
+import { setCurrentRoute } from "../../redux/routing/routing.actions";
+
+import Auth from "../../backend/Auth";
+import ButtonSpinner from "../spinners/button-spinner.component";
 
 class SignInComponent extends React.Component{
     constructor(props) {
@@ -9,14 +24,44 @@ class SignInComponent extends React.Component{
 
         this.state = {
             email: '',
-            password: ''
+            password: '',
+            loading: false,
+            errorCode: null,
         }
+        this.Swal = withReactContent(Swal)
     }
 
-    handleSubmit = (event) => {
+    handleSubmit = async (event) => {
         event.preventDefault();
-        this.setState({email: '', password: ''});
+        const { email, password } = this.state;
+        this.setState({ loading: true });
+        await Auth.authenticateUser(email, password).then(response => {
+            const userData = response.data;
+            this.props.setCurrentUser({
+                ...userData
+            });
+            this.Swal.fire({
+                icon: 'success',
+                title: 'Logged In Successfully',
+                timerProgressBar: true,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            this.setState({email: '', password: ''});
+            this.setState({ loading: false });
+        }).catch(error => {
+            const { err, message } = error.response.data;
+            this.Swal.fire({
+                icon: 'error',
+                title: 'Authentication Error',
+                text: message,
+                showConfirmButton: true,
+            });
+            this.setState({ loading: false });
+            this.setState({ errorCode: err.statusCode });
+        });
     }
+
 
     handleChange = (event) => {
         const { value, name } = event.target;
@@ -38,7 +83,7 @@ class SignInComponent extends React.Component{
 
                             <form onSubmit={this.handleSubmit}>
                                 <div className="input-group mb-3">
-                                    <FormInput type="email" name='email' value={this.state.email} handleChange={this.handleChange} placeholder="Email"  />
+                                    <FormInput type="email" name='email' className={ ' form-control ' + ((this.state.errorCode)? 'is-invalid' : '')} value={this.state.email} handleChange={this.handleChange} placeholder="Email"  />
                                     <div className="input-group-append">
                                         <div className="input-group-text">
                                             <span className="fas fa-envelope"></span>
@@ -46,7 +91,10 @@ class SignInComponent extends React.Component{
                                     </div>
                                 </div>
                                 <div className="input-group mb-3">
-                                    <FormInput type="password" name='password' value={this.state.password}  handleChange={this.handleChange} placeholder="Password"  />
+                                    <FormInput
+                                        type="password"
+                                        name='password'
+                                        className={  ' form-control ' + ((this.state.errorCode)? 'is-invalid' : '')} value={this.state.password}  handleChange={this.handleChange} placeholder="Password"  />
                                     <div className="input-group-append">
                                         <div className="input-group-text">
                                             <span className="fas fa-lock"></span>
@@ -63,30 +111,16 @@ class SignInComponent extends React.Component{
                                         </div>
                                     </div>
                                     <div className="col-4">
-                                        <FormButton type="submit" category='primary' >
-                                            Sign In
+                                        <FormButton type="submit" disabled={this.state.loading} category='primary' >
+                                           { this.state.loading ? (<ButtonSpinner />): 'Sign In' }
                                         </FormButton>
                                     </div>
                                 </div>
                             </form>
 
-                            <div className="social-auth-links text-center mt-2 mb-3">
-                                <Link to='#' className="btn btn-block btn-primary">
-                                    <i className="fab fa-facebook mr-2"></i> Sign in using Facebook
-                                </Link>
-                                <Link to='#' className="btn btn-block btn-danger">
-                                    <i className="fab fa-google-plus mr-2"></i> Sign in using Google+
-                                </Link>
-                            </div>
-
                             <p className="mb-1">
                                 <Link to='#'>
                                     <a href="forgot-password.html">I forgot my password</a>
-                                </Link>
-                            </p>
-                            <p className="mb-0">
-                                <Link to='#'>
-                                    <a href="register.html" className="text-center">Register a new membership</a>
                                 </Link>
                             </p>
                         </div>
@@ -98,4 +132,9 @@ class SignInComponent extends React.Component{
     }
 }
 
-export default SignInComponent;
+//For setting values on the state with redux
+const mapDispatchToProps = dispatch => ({
+    setCurrentUser: user => dispatch(setCurrentUser(user)),
+    setCurrentRoute: route => dispatch(setCurrentRoute(route))
+});
+export default connect(null, mapDispatchToProps)(SignInComponent);
