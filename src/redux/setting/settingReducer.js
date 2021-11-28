@@ -1,6 +1,7 @@
 import { SettingActionTypes } from "./setting.types";
 const INITIAL_STATE = {
-    currentSetting: null
+    currentSetting: null,
+    currentRouteMountStatus: false,
 }
 
 const settingReducer = (state = INITIAL_STATE, action) => {
@@ -9,6 +10,11 @@ const settingReducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 currentSetting: action.payload
+            }
+        case SettingActionTypes.SET_ROUTE_MOUNT_STATUS:
+            return {
+                ...state,
+                currentRouteMountStatus: action.payload
             }
         case SettingActionTypes.SET_SETTING_UPLOAD_PROGRESS:
             return {

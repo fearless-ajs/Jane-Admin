@@ -1,3 +1,4 @@
 export const RoutingActionTypes = {
     SET_CURRENT_ROUTE: 'SET_CURRENT_ROUTE',
+    SET_ROUTE_MOUNT_STATUS: 'SET_ROUTE_MOUNT_STATUS',
 }

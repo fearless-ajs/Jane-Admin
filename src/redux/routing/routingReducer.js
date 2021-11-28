@@ -1,6 +1,6 @@
 import { RoutingActionTypes } from "./routing.types";
 const INITIAL_STATE = {
-    currentRoute: null
+    currentRoute: null,
 }
 
 const routingReducer = (state = INITIAL_STATE, action) => {
